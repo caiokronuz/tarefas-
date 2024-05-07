@@ -1,15 +1,52 @@
 import Head from "next/head";
-
-
+import { ChangeEvent, FormEvent, useState } from "react";
 import { GetServerSideProps } from "next";
 import {getSession} from 'next-auth/react'
+
 import { TextArea } from "@/components/textArea";
 import {FiShare2} from 'react-icons/fi'
 import {FaTrash} from 'react-icons/fa'
 
+import { db } from "@/services/firebaseConnection"; 
+import {addDoc, collection} from 'firebase/firestore'
+
 import styles from './style.module.css';
 
-export default function Dashboard(){
+interface HomeProps{
+    user: {
+        email: string;
+    }
+}
+
+export default function Dashboard({user}: HomeProps){
+    const [input, setInput] = useState("");
+    const [publicTask, setPublicTask] = useState(false);
+
+    async function handleRegisterTask(e:FormEvent){
+        e.preventDefault();
+
+        if(input === ""){
+            alert("Você precisa registrar uma tarefa.")
+        }
+
+        try{
+            await addDoc(collection(db, "tasks"), {
+                tarefa: input,
+                created: new Date(),
+                user: user?.email,
+                public: publicTask,
+            })
+
+            alert("Tarefa criada com sucesso!")
+            setInput("")
+            setPublicTask(false);
+
+        }catch(err){
+            alert("olha o console")
+            console.log(err);
+        }
+    }
+
     return(
         <div className={styles.container}>
             <Head>
@@ -20,12 +57,18 @@ export default function Dashboard(){
                 <section className={styles.content}>
                     <div className={styles.contentForm}>
                         <h1 className={styles.title}>Qual sua tarefa?</h1>
-                        <form>
-                            <TextArea placeholder="Digite qual sua tarefa"/>
+                        <form onSubmit={handleRegisterTask}>
+                            <TextArea 
+                                placeholder="Digite qual sua tarefa"
+                                value={input}
+                                onChange={(e:ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
+                            />
                             <div className={styles.checkBoxArea}>
                                 <input 
                                     type="checkbox"
-                                    className={styles.checkbox}    
+                                    className={styles.checkbox}
+                                    checked={publicTask}    
+                                    onChange={(e:ChangeEvent<HTMLInputElement>) => setPublicTask(e.target.checked)}
                                 />
                                 <label>Deixar tarefa pública?</label>
                             </div>
@@ -77,6 +120,10 @@ export const getServerSideProps: GetServerSideProps = async ({req}) => {
     }
 
     return{
-        props: {session},
+        props: {
+            user:{
+                email: session?.user.email,
+            }
+        },
     }
 }
