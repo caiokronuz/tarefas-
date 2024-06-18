@@ -7,6 +7,14 @@ export function Header() {
 
     const { data: session, status } = useSession()
 
+    function handleLogout(){
+        let decision = confirm("Você deseja deslogar da sua conta?")
+
+        if(decision){
+            signOut();
+        }
+    }
+
     return (
         <header className={styles.header}>
             <section className={styles.content}>
@@ -24,7 +32,7 @@ export function Header() {
                         (<></>) :
                         session ?
                             (
-                                <button className={styles.loginButton} onClick={() => signOut()}>
+                                <button className={styles.loginButton} onClick={handleLogout}>
                                     Olá {session.user?.name}
                                 </button>) :
                             (
