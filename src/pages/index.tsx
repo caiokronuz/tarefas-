@@ -3,17 +3,18 @@ import Image from "next/image";
 import styles from "@/styles/Home.module.css";
 
 import { db } from "@/services/firebaseConnection";
-import {collection, getDocs} from "firebase/firestore"
+import { collection, getDocs } from "firebase/firestore"
 
 import heroImg from '../../public/assets/hero.png';
-import { GetStaticProps } from "next";
+import { GetServerSideProps } from "next";
+import { getSession } from "next-auth/react";
 
-interface HomeProps{
+interface HomeProps {
   posts: number,
   comments: number,
 }
 
-export default function Home({posts, comments}:HomeProps) {
+export default function Home({ posts, comments }: HomeProps) {
   return (
     <>
       <Head>
@@ -33,7 +34,7 @@ export default function Home({posts, comments}:HomeProps) {
             />
           </div>
           <h1 className={styles.title}>
-            Sitema feito para você organizar <br/>
+            Sitema feito para você organizar <br />
             seus estudos e tarefas
           </h1>
           <div className={styles.infoContent}>
@@ -50,19 +51,25 @@ export default function Home({posts, comments}:HomeProps) {
   );
 }
 
-export const getStaticProps: GetStaticProps = async () => {
 
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const commentRef = collection(db, "comments")
   const commentSnapshot = await getDocs(commentRef)
 
   const postRef = collection(db, "tasks")
   const postSnapshot = await getDocs(postRef);
 
-  return{
-    props:{
+  const session = await getSession({req});
+  if (session?.user) {
+    return {
+      redirect: {destination: "/dashboard", permanent: false}
+    }
+  }
+
+  return {
+    props: {
       posts: postSnapshot.size || 0,
       comments: commentSnapshot.size || 0
-    },
-    revalidate: 86400 //1 dia
+    }
   }
 }
