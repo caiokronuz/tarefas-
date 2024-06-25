@@ -95,7 +95,7 @@ export default function Dashboard({ user }: HomeProps) {
     }
 
     async function handleShareTask(id: string){
-        await navigator.clipboard.writeText(`${process.env.HOST_URL}/task/${id}`)
+        await navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_HOST_URL}/task/${id}`)
         alert("URL COPIADA COM SUCESSO!")
     }
 
